@@ -8,6 +8,10 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Middlewares/Third_Party/FatFs/src/option/subdir.mk
+-include Middlewares/Third_Party/FatFs/src/subdir.mk
+-include FATFS/Target/subdir.mk
+-include FATFS/App/subdir.mk
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
@@ -46,8 +50,8 @@ PSD_ECM.bin \
 all: PSD_ECM.elf secondary-outputs
 
 # Tool invocations
-PSD_ECM.elf: $(OBJS) $(USER_OBJS)
-	arm-none-eabi-gcc -o "PSD_ECM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 --specs=nosys.specs -Wl,-Map="PSD_ECM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+PSD_ECM.elf: $(OBJS) $(USER_OBJS) /home/szymon/Documents/Workspace/PSD_ECM/STM32F407VGTX_FLASH.ld
+	arm-none-eabi-gcc -o "PSD_ECM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/szymon/Documents/Workspace/PSD_ECM/STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="PSD_ECM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

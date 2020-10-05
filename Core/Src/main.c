@@ -1,22 +1,24 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : ECM Module software
-  * @author			: Szymon Kacperek
-  * @date			: 14/08/2020
-  ******************************************************************************
-  * Code created by me is signed in longer * arrays. Naming is adapted to Google C/C++ Style Guide.
-  *
-  * NOTES
-  * @ 9/09 CAN is set on different pins than on .sch. Set for test purposes.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : ECM Module software
+ * @author			: Szymon Kacperek
+ * @date			: 14/08/2020
+ ******************************************************************************
+ * Code created by me is signed in longer * arrays. Naming is adapted to Google C/C++ Style Guide.
+ *
+ * NOTES
+ * @ 9/09 CAN is set on different pins than on .sch. Set for test purposes.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "can.h"
+#include "dma.h"
+#include "fatfs.h"
+#include "sdio.h"
 #include "tim.h"
 #include "gpio.h"
 
@@ -25,7 +27,7 @@
 
 /************************************************************************************************
  PRIVATE INCLUDES
-************************************************************************************************/
+ ************************************************************************************************/
 #include "canopen_object_dict.h"
 
 /* USER CODE END Includes */
@@ -47,7 +49,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+/************************************************************************************************
+ PRIVATE VARIABLES
+ ************************************************************************************************/
+//FATFS myFatFS;
+//FIL myFile;
+//FRESULT fresult;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,10 +65,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-/************************************************************************************************
- PRIVATE VARIABLES
-************************************************************************************************/
 
 /* USER CODE END 0 */
 
@@ -93,44 +96,97 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_CAN1_Init();
-  MX_CAN2_Init();
+  MX_DMA_Init();
   MX_TIM10_Init();
+  MX_SDIO_SD_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
 	/************************************************************************************************
 	 CAN PERIPHERIAL AND ITS COMPONENTS
 	 ************************************************************************************************/
-	CanopenObjectDictInit();
-	CanConfigFilter(CAN_HIGH_SPEED, 0, 0x0000, 0x0000, 0x0000, 0x0000);
-	CanInit(CAN_HIGH_SPEED);
-	CanInit(CAN_LOW_SPEED);
-	HAL_TIM_Base_Start_IT(&htim10);
-
+//	CanopenObjectDictInit();
+//	CanConfigFilter(CAN_HIGH_SPEED, 0, 0x0000, 0x0000, 0x0000, 0x0000);
+//	CanInit(CAN_HIGH_SPEED);
+//	CanInit(CAN_LOW_SPEED);
+//	HAL_TIM_Base_Start_IT(&htim10);
 	/************************************************************************************************
 	 TURNING ON THE MODULES
 	 ************************************************************************************************/
-	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, bms.node_id);
-	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, inverter_1.node_id);
-	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, inverter_2.node_id);
-	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, mppt_1.node_id);
-	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, mppt_2.node_id);
-	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, mppt_3.node_id);
-	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, lights_controller.node_id);
-	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, dashboard.node_id);
+//	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, bms.node_id);
+//	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, inverter_1.node_id);
+//	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, inverter_2.node_id);
+//	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, mppt_1.node_id);
+//	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, mppt_2.node_id);
+//	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, mppt_3.node_id);
+//	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, lights_controller.node_id);
+//	CanSendNmt(CAN_HIGH_SPEED, OPERATIONAL_STATE, dashboard.node_id);
+	/************************************************************************************************
+	 FATFS
+	 ************************************************************************************************/
+//	fresult = BSP_SD_Init();
+//		if ((fresult) != FR_OK) {
+//			HAL_GPIO_WritePin(led_red_GPIO_Port, led_red_Pin, GPIO_PIN_SET);
+//		} else {
+//
+//	fresult = f_mount(&myFatFS, (TCHAR const*) SDPath, 0);
+//	if (fresult == FR_OK) {
+////	if (f_mount(&myFatFS, (TCHAR const*) SDPath, 1) == FR_OK) {
+//		HAL_GPIO_WritePin(led_green_GPIO_Port, led_green_Pin, GPIO_PIN_SET);
+//
+//		fresult = f_open(&myFile, "TEST.TXT", FA_CREATE_ALWAYS | FA_WRITE);
+//		if (fresult == FR_OK) {
+////		if (f_open(&myFile, "TEST.TXT", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
+//			HAL_GPIO_WritePin(led_orange_GPIO_Port, led_orange_Pin,
+//					GPIO_PIN_SET);
+//		}
+//
+//	} else {
+//		HAL_GPIO_WritePin(led_red_GPIO_Port, led_red_Pin, GPIO_PIN_SET);
+//	}
+//		}
+	FRESULT res;
+	FATFS SDFatFs; /* File system object for SD disk logical drive */
+	FIL MyFile; /* File object */
+	res = f_mount(&SDFatFs, (TCHAR const*) SDPath, 1);
+	if (res != FR_OK)
+		Error_Handler();
+
+	res = f_open(&MyFile, "STM32.TXT", FA_CREATE_ALWAYS | FA_WRITE);
+	if (res != FR_OK)
+		Error_Handler();
+
+	res = f_mkdir("dir");
+	if ((res != FR_OK) && (res != FR_EXIST))
+		Error_Handler();
+
+
+
+	UINT written;
+	res = f_write(&MyFile, "hello card", 10, &written);
+	if (res != FR_OK)
+		Error_Handler();
+
+	f_close(&MyFile);
+	if (res != FR_OK)
+		Error_Handler();
+
+	FILINFO info;
+	res = f_stat("0:/STM32.TXT", &info);
+	if (res != FR_OK)
+		Error_Handler();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+	while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-
-  }
+		HAL_GPIO_TogglePin(led_green_GPIO_Port, led_green_Pin);
+		HAL_Delay(500);
+	}
   /* USER CODE END 3 */
 }
 
@@ -188,8 +244,11 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-
+	/* User can add his own implementation to report the HAL error return state */
+	while (1) {
+		HAL_GPIO_TogglePin(led_red_GPIO_Port, led_red_Pin);
+		HAL_Delay(500);
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 
