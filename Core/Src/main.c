@@ -29,6 +29,7 @@
  PRIVATE INCLUDES
  ************************************************************************************************/
 #include "canopen_object_dict.h"
+#include "stdbool.h"
 
 /* USER CODE END Includes */
 
@@ -145,36 +146,36 @@ int main(void)
 //		HAL_GPIO_WritePin(led_red_GPIO_Port, led_red_Pin, GPIO_PIN_SET);
 //	}
 //		}
-	FRESULT res;
-	FATFS SDFatFs; /* File system object for SD disk logical drive */
-	FIL MyFile; /* File object */
-	res = f_mount(&SDFatFs, (TCHAR const*) SDPath, 1);
-	if (res != FR_OK)
-		Error_Handler();
-
-	res = f_open(&MyFile, "STM32.TXT", FA_CREATE_ALWAYS | FA_WRITE);
-	if (res != FR_OK)
-		Error_Handler();
-
-	res = f_mkdir("dir");
-	if ((res != FR_OK) && (res != FR_EXIST))
-		Error_Handler();
-
-
-
-	UINT written;
-	res = f_write(&MyFile, "hello card", 10, &written);
-	if (res != FR_OK)
-		Error_Handler();
-
-	f_close(&MyFile);
-	if (res != FR_OK)
-		Error_Handler();
-
-	FILINFO info;
-	res = f_stat("0:/STM32.TXT", &info);
-	if (res != FR_OK)
-		Error_Handler();
+//	FRESULT res;
+//	FATFS SDFatFs; /* File system object for SD disk logical drive */
+//	FIL MyFile; /* File object */
+//	res = f_mount(&SDFatFs, (TCHAR const*) SDPath, 1);
+//	if (res != FR_OK)
+//		Error_Handler();
+//
+//	res = f_open(&MyFile, "STM32.TXT", FA_CREATE_ALWAYS | FA_WRITE);
+//	if (res != FR_OK)
+//		Error_Handler();
+//
+//	res = f_mkdir("dir");
+//	if ((res != FR_OK) && (res != FR_EXIST))
+//		Error_Handler();
+//
+//
+//
+//	UINT written;
+//	res = f_write(&MyFile, "hello card", 10, &written);
+//	if (res != FR_OK)
+//		Error_Handler();
+//
+//	f_close(&MyFile);
+//	if (res != FR_OK)
+//		Error_Handler();
+//
+//	FILINFO info;
+//	res = f_stat("0:/STM32.TXT", &info);
+//	if (res != FR_OK)
+//		Error_Handler();
 
   /* USER CODE END 2 */
 
@@ -184,8 +185,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		HAL_GPIO_TogglePin(led_green_GPIO_Port, led_green_Pin);
-		HAL_Delay(500);
+		bool wynik = HAL_GPIO_ReadPin(OPTO_INPUT_1_GPIO_Port, OPTO_INPUT_1_Pin);
+		HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, wynik);
+
+		HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 	}
   /* USER CODE END 3 */
 }
@@ -210,7 +213,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 160;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
@@ -246,7 +249,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return state */
 	while (1) {
-		HAL_GPIO_TogglePin(led_red_GPIO_Port, led_red_Pin);
+		HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 		HAL_Delay(500);
 	}
   /* USER CODE END Error_Handler_Debug */
